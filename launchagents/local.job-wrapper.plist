@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Example: a scheduled job that runs a wrapper script once a day.
+     Replace youruser and the paths. plists cannot expand $HOME, so write the full path.
+     The wrapper script (not this file) should: source ~/.env, cd into the project, and refuse to run on the wrong machine
+     (read ~/.machine-role). env -u ANTHROPIC_API_KEY keeps claude -p on your subscription.
+     Check with: plutil -lint local.job-wrapper.plist
+     Install:    launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/local.job-wrapper.plist -->
+<plist version="1.0"><dict>
+  <key>Label</key><string>local.job-wrapper</string>
+  <key>ProgramArguments</key><array>
+    <string>/usr/bin/env</string><string>-u</string><string>ANTHROPIC_API_KEY</string>
+    <string>/bin/bash</string><string>/Users/youruser/code/my-jobs/run-nightly.sh</string>
+  </array>
+  <key>WorkingDirectory</key><string>/Users/youruser/code/my-jobs</string>
+  <key>EnvironmentVariables</key><dict>
+    <key>HOME</key><string>/Users/youruser</string>
+    <key>PATH</key><string>/Users/youruser/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+  </dict>
+  <key>StartCalendarInterval</key><dict>
+    <key>Hour</key><integer>6</integer>
+    <key>Minute</key><integer>30</integer>
+  </dict>
+  <key>StandardOutPath</key><string>/Users/youruser/logs/job-wrapper.log</string>
+  <key>StandardErrorPath</key><string>/Users/youruser/logs/job-wrapper.log</string>
+</dict></plist>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Claude Remote Control server on the Mac mini: steer sessions from claude.ai/code or the Claude app.
+     same-dir spawn (no worktree pile-up), capacity 2, default permission mode (approve risky actions from your phone).
+     Replace youruser and the paths. Do the one-time answers first (RUNBOOK step B8b), then load this.
+     Create the logs folder first: mkdir -p ~/logs -->
+<plist version="1.0"><dict>
+  <key>Label</key><string>local.claude-remote</string>
+  <key>ProgramArguments</key><array>
+    <string>/usr/bin/env</string><string>-u</string><string>ANTHROPIC_API_KEY</string>
+    <string>/Users/youruser/.local/bin/claude</string><string>remote-control</string>
+    <string>--name</string><string>my-mini</string>
+    <string>--spawn</string><string>same-dir</string>
+    <string>--capacity</string><string>2</string>
+    <string>--remote-control-session-name-prefix</string><string>my-mini</string>
+  </array>
+  <key>WorkingDirectory</key><string>/Users/youruser/code/my-project</string>
+  <key>EnvironmentVariables</key><dict>
+    <key>HOME</key><string>/Users/youruser</string>
+    <key>CLAUDE_REMOTE_CONTROL_SESSION_NAME_PREFIX</key><string>my-mini</string>
+    <key>PATH</key><string>/Users/youruser/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+  </dict>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><true/>
+  <key>ThrottleInterval</key><integer>30</integer>
+  <key>ProcessType</key><string>Interactive</string>
+  <key>StandardOutPath</key><string>/Users/youruser/logs/claude-remote.log</string>
+  <key>StandardErrorPath</key><string>/Users/youruser/logs/claude-remote.log</string>
+</dict></plist>
