@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- A tmux server that starts with the desktop login on the mini and keeps one session ("keep") alive.
+     Sessions opened inside it inherit the desktop login, so the Keychain opens: Claude Code gets its connectors and Artifacts.
+     Replace youruser. Load: launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/local.tmux-gui.plist
+     Check: /opt/homebrew/bin/tmux -L claude ls   shows "keep". Needs: brew install tmux -->
+<plist version="1.0"><dict>
+  <key>Label</key><string>local.tmux-gui</string>
+  <key>ProgramArguments</key><array><string>/bin/sh</string><string>-c</string>
+  <string>/opt/homebrew/bin/tmux -L claude has-session -t keep 2>/dev/null || /opt/homebrew/bin/tmux -L claude new-session -d -s keep; while /opt/homebrew/bin/tmux -L claude has-session -t keep 2>/dev/null; do sleep 60; done</string></array>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><true/>
+  <key>EnvironmentVariables</key><dict><key>PATH</key><string>/Users/youruser/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string><key>LANG</key><string>en_US.UTF-8</string></dict>
+</dict></plist>

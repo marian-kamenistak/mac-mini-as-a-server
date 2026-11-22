@@ -72,6 +72,31 @@ State that a fresh clone does not have: anything gitignored. That includes "alre
 2. On the laptop: `mv ~/Library/LaunchAgents/<label>.plist.moved-to-mini ~/Library/LaunchAgents/<label>.plist && launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/<label>.plist`.
 3. Copy the state back the same way it went over.
 
+## Interactive Claude sessions on the mini
+
+A plain `ssh mini claude` answers "Not logged in", because SSH cannot open the login Keychain. Two fixes, pick by what you need.
+
+**Fix 1, the model only: a token for SSH shells.** Enough for a quick question or a script. It does not bring connectors, OAuth tool servers or Artifacts.
+
+| # | Step | Check |
+|---|---|---|
+| S1 | From the laptop: `ssh -t mini 'claude setup-token'`. Open the link, approve, paste the one-time code back into the terminal | It prints a token that starts with `sk-ant-oat01-` |
+| S2 | Copy only the token line, then: `pbpaste \| ssh mini 'umask 077; cat > ~/.claude/ssh-oauth-token'` | `ssh mini 'wc -c ~/.claude/ssh-oauth-token'` shows about 110 bytes, not the length of the command |
+| S3 | In `~/.zshenv` on the mini: `if [[ -n $SSH_CONNECTION && -r ~/.claude/ssh-oauth-token ]]; then export CLAUDE_CODE_OAUTH_TOKEN="$(<~/.claude/ssh-oauth-token)"; fi` | Desktop sessions and launchd jobs keep using the Keychain |
+| S4 | `ssh mini 'claude -p "Reply with exactly: ok"'` | Prints ok, exit code 0 |
+| S5 | Keep a copy in your password manager. The token ends after one year: set an alert before that date | The alert exists |
+
+**Fix 2, the full login: a tmux server that starts with the desktop login.** Sessions opened inside it inherit the desktop login, so the Keychain opens. They also survive a dropped SSH connection.
+
+| # | Step | Check |
+|---|---|---|
+| T1 | On the mini: `brew install tmux`, copy `launchagents/local.tmux-gui.plist` to `~/Library/LaunchAgents/`, replace `youruser`, then `launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/local.tmux-gui.plist` | `ssh mini /opt/homebrew/bin/tmux -L claude ls` shows `keep` |
+| T2 | Link `scripts/claude-mini-remote` into `~/.local/bin` on the mini and `scripts/claude-mini` into `~/.local/bin` on the laptop | `which claude-mini` on the laptop |
+| T3 | In a project folder on the laptop: `claude-mini` | Claude opens on the mini in the same folder; `/mcp` lists your connectors |
+| T4 | Close the terminal tab, run `claude-mini` in the same folder again | It prints "reattaching" and the conversation is still there |
+
+`claude-mini` warns about uncommitted or unpushed changes on the laptop, because the mini cannot see them. On the mini it pulls only when the folder there is clean. The mini must be logged in at the desktop (see Reboots).
+
 ## Reboots (FileVault ON)
 
 - **Planned:** `ssh mini 'sudo fdesetup authrestart'`. It comes back logged in. Test this once while you are at home.

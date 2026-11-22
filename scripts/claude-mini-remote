@@ -1,0 +1,32 @@
+#!/bin/bash
+# claude-mini-remote DIR [claude args...]: mini side of claude-mini (see that script). DIR may start with "~".
+# Folders with spaces in the path are not supported.
+set -u
+DIR="${1/#\~/$HOME}"; shift
+TMUX_BIN="${TMUX_BIN:-/opt/homebrew/bin/tmux}"
+T="$TMUX_BIN -L claude"
+if [ ! -d "$DIR" ]; then echo "claude-mini: $DIR does not exist on the mini (clone or push it first)" >&2; exit 1; fi
+if ! $T has-session -t keep 2>/dev/null; then
+  launchctl kickstart -k "gui/$(id -u)/local.tmux-gui" >/dev/null 2>&1; sleep 2
+  $T has-session -t keep 2>/dev/null || { echo "claude-mini: GUI tmux server is not running (is the mini logged in at the desktop?)" >&2; exit 1; }
+fi
+if git -C "$DIR" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  mdirty=$(git -C "$DIR" status --porcelain 2>/dev/null | wc -l | tr -d ' ')
+  if [ "$mdirty" != 0 ]; then
+    echo "warning: mini has $mdirty uncommitted file(s) in this folder, so no git pull"
+  elif git -C "$DIR" rev-parse '@{u}' >/dev/null 2>&1; then
+    git -C "$DIR" pull --ff-only -q 2>&1 | tail -2 || true
+  fi
+fi
+# Reattach to a detached session for this folder (a dropped connection or a closed tab).
+S=$($T ls -F '#{session_attached} #{@cm_dir} #{session_name}' 2>/dev/null |
+    awk -v d="$DIR" '$1 == 0 && $2 == d { print $3; exit }')
+if [ -n "$S" ]; then echo "reattaching to $S"; sleep 1; exec $T attach -t "$S"; fi
+BASE=$(basename "$DIR" | tr -c 'A-Za-z0-9_-\n' '-')
+S="$BASE-$(date +%H%M%S)"
+# The session must not see the SSH variables or the SSH-only token: it uses the desktop login from the Keychain.
+CMD="cd $(printf '%q' "$DIR") && exec env -u CLAUDE_CODE_OAUTH_TOKEN -u SSH_CONNECTION -u SSH_CLIENT -u SSH_TTY $HOME/.local/bin/claude${*:+ $(printf '%q ' "$@")}"
+$T new-session -d -s "$S" -c "$DIR" "/bin/zsh -lc $(printf '%q' "$CMD")"
+$T set-option -t "$S" @cm_dir "$DIR" >/dev/null
+$T set-option -t "$S" status off >/dev/null
+exec $T attach -t "$S"

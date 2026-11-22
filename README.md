@@ -54,12 +54,13 @@ Set `MINI_HOST_NAME` (default `my-mini`) to the Local hostname you gave the mini
 
 ## Files
 
-- [RUNBOOK.md](RUNBOOK.md): every step as a command plus a check, phase A (at the mini), phase B (from the laptop), moving jobs, rollback, reboots
+- [RUNBOOK.md](RUNBOOK.md): every step as a command plus a check, phase A (at the mini), phase B (from the laptop), moving jobs, rollback, interactive Claude sessions, reboots
 - [PITFALLS.md](PITFALLS.md): what I assumed, what was true, and the fix, for the mistakes along the way
 - `scripts/lib.sh`: shared helpers and the full PATH export
 - `scripts/10-root.sh` to `scripts/60-claude.sh`: the setup steps
 - `scripts/move-job.sh`: move one launchd job to the mini
-- `launchagents/`: example plists for a job wrapper and for Claude Remote Control
+- `scripts/claude-mini`, `scripts/claude-mini-remote`: open a Claude Code session on the mini from the laptop, with the full login
+- `launchagents/`: example plists for a job wrapper, for Claude Remote Control and for the tmux server that carries the desktop login
 - `manifest/repos.tsv.example`, `secrets.list.example`: the two lists you edit
 - `LICENSE`: MIT
 

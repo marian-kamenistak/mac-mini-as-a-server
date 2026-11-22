@@ -1,0 +1,22 @@
+#!/bin/bash
+# claude-mini [claude args...]: run a Claude Code session on the mini, in the same folder as here.
+# The session runs inside the mini's GUI tmux server (LaunchAgent local.tmux-gui, socket "claude"), so it has the
+# desktop login: connectors, OAuth tool servers and Artifacts work. It survives a dropped SSH connection and a closed lid.
+# Run it again in the same folder to reattach to a session nobody is attached to; otherwise a new one starts.
+# It warns about local changes the mini cannot see, and does not block. Mini side: claude-mini-remote.
+# Install: symlink both scripts into ~/.local/bin (this one on the laptop, claude-mini-remote on the mini).
+set -u
+MINI="${MINI_SSH_HOST:-mini}"
+DIR="$PWD"
+case "$DIR" in
+  "$HOME"|"$HOME"/*) ;;
+  *) echo "claude-mini: $DIR is outside your home folder; the mini only mirrors paths under ~" >&2; exit 1 ;;
+esac
+if git -C "$DIR" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  dirty=$(git -C "$DIR" status --porcelain 2>/dev/null | wc -l | tr -d ' ')
+  ahead=$(git -C "$DIR" rev-list --count '@{u}..HEAD' 2>/dev/null || echo 0)
+  [ "$dirty" != 0 ] && echo "warning: $dirty uncommitted file(s) here are not on the mini"
+  [ "$ahead" != 0 ] && echo "warning: $ahead unpushed commit(s) here are not on the mini"
+fi
+REMOTE_DIR="~${DIR#$HOME}"
+exec ssh -t "$MINI" "\$HOME/.local/bin/claude-mini-remote $(printf '%q ' "$REMOTE_DIR" "$@")"
