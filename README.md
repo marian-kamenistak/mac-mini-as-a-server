@@ -4,7 +4,7 @@ A runbook and a set of scripts that turn a Mac mini into an always-on home runne
 
 The laptop sleeps, travels and freezes. The jobs that live on it fail with it. The mini sits at home, stays awake and keeps the same IP, the same browser sessions and the same Claude login.
 
-Full story: [Mac mini as a server: 53 traps moving my AI jobs](https://www.marian.coach/blog/mac-mini-as-a-server/)
+Full story: [Mac mini as a server: 53 lessons learned moving my AI jobs](https://www.marian.coach/blog/mac-mini-as-a-server/)
 
 ## Where each job runs
 
